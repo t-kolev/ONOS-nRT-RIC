@@ -5,7 +5,6 @@ on:
     branches: [ "master" ]
     
 jobs:
-  build:
     # Importing a reusable workflow from another repository and branch
     uses: t-kolev/ric-plt-xapp-frame/.github/workflows/anchore.yml@main
     
