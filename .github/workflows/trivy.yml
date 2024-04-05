@@ -6,9 +6,4 @@ on:
     
 jobs:
     Scan:
-    # Importing a reusable workflow from another repository and branch
-<<<<<<< HEAD
      uses: t-kolev/ric-plt-xapp-frame/.github/workflows/trivy.yml@master
-=======
-     uses: t-kolev/ric-plt-xapp-frame/.github/workflows/trivy.yml@master 
->>>>>>> refs/remotes/origin/workflows
