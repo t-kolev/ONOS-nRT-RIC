@@ -1,0 +1,13 @@
+name: Snyk SCA
+
+on:
+  push:
+    branches: [ "workflows" ]
+    
+jobs:
+    Scan:
+    # Importing a reusable workflow from another repository and branch
+        uses: t-kolev/ric-plt-xapp-frame/.github/workflows/snyk.yml@master
+        with:
+            secrets:
+            SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
