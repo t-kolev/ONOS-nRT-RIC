@@ -1,9 +1,11 @@
 name: Grype SCA
 
 on:
-  push:
-    branches: [ "workflows" ]
-    
+    push:
+        branches: [ "workflows" ]
+    schedule:
+    - cron: 0 12 * * 1
+    # At 12:00 on Monday.
 jobs:
     Scan:
     # Importing a reusable workflow from another repository and branch

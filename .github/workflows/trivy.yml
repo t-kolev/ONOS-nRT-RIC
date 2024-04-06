@@ -2,7 +2,10 @@ name: Trivy SCA
 
 on:
   push:
-    branches: [ "workflows" ]
+      branches: [ "workflows" ]
+  schedule:
+  - cron: 0 12 * * 1
+  # At 12:00 on Monday.
     
 jobs:
     Scan:

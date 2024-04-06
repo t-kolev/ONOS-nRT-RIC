@@ -1,8 +1,11 @@
 name: Snyk SCA
 
 on:
-  push:
-    branches: [ "workflows" ]
+    push:
+        branches: [ "workflows" ]
+    schedule:
+    - cron: 0 12 * * 1
+    # At 12:00 on Monday.
     
 jobs:
     Scan:
