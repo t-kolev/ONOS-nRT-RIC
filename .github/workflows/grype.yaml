@@ -9,4 +9,4 @@ on:
 jobs:
     Scan:
     # Importing a reusable workflow from another repository and branch
-     uses: t-kolev/ric-plt-xapp-frame/.github/workflows/grype.yml@master
+        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/grype.yml@main

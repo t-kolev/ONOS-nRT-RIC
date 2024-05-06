@@ -9,4 +9,4 @@ on:
     
 jobs:
     Scan:
-     uses: t-kolev/ric-plt-xapp-frame/.github/workflows/trivy.yml@master
+     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/trivy.yml@main
