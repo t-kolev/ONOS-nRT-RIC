@@ -1,12 +1,15 @@
 name: Snyk SCA
 
 on:
-  push:
-    branches: [ "workflows" ]
+    push:
+        branches: [ "main" ]
+    schedule:
+        - cron: 0 12 * * 1
+    # At 12:00 on Monday.
     
 jobs:
     Scan:
     # Importing a reusable workflow from another repository and branch
-        uses: t-kolev/ric-plt-xapp-frame/.github/workflows/snyk.yml@master
+        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/snyk.yaml@fine_tunning
         secrets:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

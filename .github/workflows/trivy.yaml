@@ -2,8 +2,11 @@ name: Trivy SCA
 
 on:
   push:
-    branches: [ "workflows" ]
+      branches: [ "main" ]
+  schedule:
+    - cron: 0 12 * * 1
+  # At 12:00 on Monday.
     
 jobs:
     Scan:
-     uses: t-kolev/ric-plt-xapp-frame/.github/workflows/trivy.yml@master
+     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/trivy.yaml@main
