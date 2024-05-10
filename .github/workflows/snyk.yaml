@@ -10,6 +10,6 @@ on:
 jobs:
     Scan:
     # Importing a reusable workflow from another repository and branch
-        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/snyk.yaml@fine_tunning
+        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/snyk.yaml@fine_tuning
         secrets:
             SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
