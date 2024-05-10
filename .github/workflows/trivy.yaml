@@ -9,4 +9,4 @@ on:
     
 jobs:
     Scan:
-     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/trivy.yaml@main
+     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/trivy.yaml@fine_tuning
