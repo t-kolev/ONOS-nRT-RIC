@@ -1,12 +1,47 @@
-name: Trivy SCA
+name: trivy
 
 on:
+  workflow_call:
   push:
-      branches: [ "main" ]
-  schedule:
-    - cron: 0 12 * * 1
-  # At 12:00 on Monday.
-    
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
 jobs:
-    Scan:
-     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/trivy.yaml@main
+  build:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    name: Build
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: List directories
+        id: list-dirs
+        run: |
+          dirs=$(find . -maxdepth 1 -type d | sed 's|^\./||' | tail -n +2)
+          echo "::set-output name=dirs::${dirs// /,}"
+
+      - name: Run Trivy scans on each directory
+        run: |
+          IFS=',' read -r -a dir_array <<< "${{ steps.list-dirs.outputs.dirs }}"
+          for dir in "${dir_array[@]}"
+          do
+            echo "Running Trivy scan in directory: $dir"
+            trivy fs --format json --output "$dir-trivy-results.json" --severity LOW,MEDIUM,CRITICAL,HIGH "$dir"
+          done
+
+      - name: Save the json vulnerability reports to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-results
+          path: '*.json'
+          
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
