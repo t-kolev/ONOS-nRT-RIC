@@ -24,7 +24,7 @@ jobs:
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-
+ 
     - name: Set up Git
       run: |
         git config --global user.name "${{ secrets.GIT_USERNAME }}"
