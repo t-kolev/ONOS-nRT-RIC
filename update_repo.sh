@@ -58,4 +58,5 @@ while IFS= read -r url; do
         fi
     fi
 done < "$URLS_FILE"
-git push 
+git push  # Push the changes 
+
