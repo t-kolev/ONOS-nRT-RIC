@@ -10,4 +10,4 @@ on:
 jobs:
     Scan:
     # Importing a reusable workflow from another repository and branch
-        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/grype.yaml@fine_tuning
+        uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/grype.yaml@main
