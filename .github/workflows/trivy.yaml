@@ -85,12 +85,4 @@ jobs:
           uses: actions/upload-artifact@v3
           with:
               name: plots
-              path: |
-                total_vulnerabilities_per_ric.png
-                vulnerabilities_per_repo_ONOS.png
-                vulnerabilities_per_repo_OSC.png
-                severity_distribution_ONOS.png
-                severity_distribution_OSC.png
-                vulnerable_packages_per_ric.png
-                vulnerable_packages_per_repo_ONOS.png
-                vulnerable_packages_per_repo_OSC.png
+              path: "*.png"
