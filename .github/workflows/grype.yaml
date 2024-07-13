@@ -45,9 +45,6 @@ jobs:
     # Importing a reusable workflow from another repository and branch
     uses: t-kolev/Continuous-SCA-Scanning/.github/workflows/grype.yaml@main
 
-
-    name: Grype scan
-
   Data_Analysis:
     name: Data Analysis
     needs: Grype-Scan
