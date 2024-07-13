@@ -727,6 +727,7 @@ def main():
     plt.ylabel('Number of Vulnerabilities')
     plt.ylim(0, max(total_vulnerabilities_ric.values()) + 5)  # Adjust y-axis limit to fit the data
     plt.grid(axis='y')
+    plt.tight_layout()  # Ensure everything fits without being cut off
     plt.savefig(f'total_vulnerabilities_per_ric_{tool_name}.png', dpi=300)
     plt.show()
 
@@ -762,6 +763,7 @@ def main():
     plt.ylabel('Number of Vulnerable Packages')
     plt.ylim(0, max(vulnerable_packages_per_ric.values()) + 5)  # Adjust y-axis limit to fit the data
     plt.grid(axis='y')
+    plt.tight_layout()  # Ensure everything fits without being cut off
     plt.savefig(f'vulnerable_packages_per_ric_{tool_name}.png', dpi=300)
     plt.show()
 
