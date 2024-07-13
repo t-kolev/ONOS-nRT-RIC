@@ -77,7 +77,7 @@ jobs:
       
       # Save the JSON vulnerability report to an artifact
       - name: Save the JSON vulnerability report to an artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: results_data_analysis
           path: sca_results.json
