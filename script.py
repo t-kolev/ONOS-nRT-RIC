@@ -242,12 +242,16 @@ def save_vulnerabilities_by_directory(vulnerabilities_by_directory, tool, base_d
             json.dump(vulnerabilities, json_file, separators=(',', ':'))
         
 
+# Dump scan results into a JSON file
 def dump_scan_results(rics, sca_tools):
-    scan_results = dict.fromkeys(rics)
+    # Initialize the dictionary to store scan results
+    scan_results = {ric: {} for ric in rics}
     onos_repos = []
     osc_repos = []
+
+    # Gather repository names within each RIC directory
     for ric in rics:
-        ric_dir = "./" + ric
+        ric_dir = f"./{ric}"
         if not os.path.exists(ric_dir):
             os.makedirs(ric_dir)
         for repository in sorted(os.listdir(ric_dir)):
@@ -255,23 +259,29 @@ def dump_scan_results(rics, sca_tools):
                 onos_repos.append(repository)
             elif ric == "OSC":
                 osc_repos.append(repository)
+
+    # Initialize the scan_results dictionary with repositories
     for ric in rics:
         if ric == "ONOS":
-            scan_results[ric] = dict.fromkeys(onos_repos)
+            scan_results[ric] = {repo: {} for repo in onos_repos}
         elif ric == "OSC":
-            scan_results[ric] = dict.fromkeys(osc_repos)
-        for repository in sorted(os.listdir("./" + ric)):
-            scan_results[ric][repository] = dict.fromkeys(sca_tools)
-            path_to_repository = os.path.join("./" + ric, repository)
+            scan_results[ric] = {repo: {} for repo in osc_repos}
+
+        # Populate scan_results with SCA tool results
+        for repository in scan_results[ric].keys():
+            path_to_repository = os.path.join(f"./{ric}", repository)
             for sca_tool_file in sorted(os.listdir(path_to_repository)):
-                sca_tool_file_path = os.path.join(path_to_repository, sca_tool_file)
-                with open(sca_tool_file_path) as file:
-                    vuln = file.read()
-                scan_results[ric][repository][sca_tool_file] = vuln
+                if sca_tool_file in sca_tools:
+                    sca_tool_file_path = os.path.join(path_to_repository, sca_tool_file)
+                    with open(sca_tool_file_path) as file:
+                        vuln = file.read()
+                    scan_results[ric][repository][sca_tool_file] = vuln
+
+    # Save scan_results to a JSON file
     with open('sca_results.json', 'w') as file:
         json.dump(scan_results, file)
-    print("Finished writing: " + 'sca_results.json')
-    #pprint.pprint(scan_results)
+
+    print("Finished writing: 'sca_results.json'")
     return scan_results
 
 # Define the get_cves_cvss_dependencies function
@@ -641,7 +651,7 @@ def main():
     base_dir = f"./{args.ric}"
     save_vulnerabilities_by_directory(vulnerabilities_by_directory, args.tool, base_dir)
 
-    sca_results = dump_scan_results(['ONOS'], ['Grype.txt'])
+    sca_results = dump_scan_results([args.ric], [args.tool])
     sca_cvecvss_dependencies_results = extract_cves(sca_results)
 
 
@@ -670,57 +680,61 @@ def main():
     vulnerable_packages_per_repo = {ric: {repo: packages_info[0]['unique_packages'] for repo, packages_info in repos.items()} for ric, repos in packages_per_ric_repo.items()}
 
     # Plotting
+
+    tool_name = args.tool.split('.')[0]
+
     plt.figure()
     plt.bar(total_vulnerabilities_ric.keys(), total_vulnerabilities_ric.values(), color='skyblue')
-    plt.title('Total Number of Vulnerabilities per RIC')
+    plt.title(f'Total Number of Vulnerabilities per RIC (Tool: {tool_name})')
     plt.xlabel('RIC')
     plt.ylabel('Number of Vulnerabilities')
     plt.grid(axis='y')
-    plt.savefig('total_vulnerabilities_per_ric.png', dpi=300)
-    plt.show()
+    plt.savefig(f'total_vulnerabilities_per_ric_{tool_name}.png', dpi=300)
+    plt.show()  
 
     for ric, repos in vulnerabilities_per_repo.items():
         plt.figure(figsize=(14, 8))
         plt.bar(repos.keys(), repos.values(), color='lightgreen')
-        plt.title(f'Vulnerabilities per Repository for {ric}')
+        plt.title(f'Vulnerabilities per Repository for {ric} (Tool: {tool_name})')
         plt.xlabel('Repository')
         plt.ylabel('Number of Vulnerabilities')
         plt.xticks(rotation=90)
         plt.grid(axis='y')
         plt.tight_layout()
-        plt.savefig(f'vulnerabilities_per_repo_{ric}.png', dpi=300)
+        plt.savefig(f'vulnerabilities_per_repo_{ric}_{tool_name}.png', dpi=300)
         plt.show()
-
+        
     for ric, severity in severity_distribution.items():
         plt.figure()
         plt.bar(severity.keys(), severity.values(), color=['lightblue', 'lightgreen', 'salmon', 'orange'])
-        plt.title(f'Severity Distribution for {ric}')
+        plt.title(f'Severity Distribution for {ric} (Tool: {tool_name})')
         plt.xlabel('Severity')
         plt.ylabel('Number of Vulnerabilities')
         plt.grid(axis='y')
-        plt.savefig(f'severity_distribution_{ric}.png', dpi=300)
+        plt.savefig(f'severity_distribution_{ric}_{tool_name}.png', dpi=300)
         plt.show()
 
     plt.figure(figsize=(10, 6))
     plt.bar(vulnerable_packages_per_ric.keys(), vulnerable_packages_per_ric.values(), color='violet')
-    plt.title('Distribution of Vulnerable Dependency Packages per RIC')
+    plt.title(f'Distribution of Vulnerable Dependency Packages per RIC (Tool: {tool_name})')
     plt.xlabel('RIC')
     plt.ylabel('Number of Vulnerable Packages')
     plt.grid(axis='y')
-    plt.savefig('vulnerable_packages_per_ric.png', dpi=300)
+    plt.savefig(f'vulnerable_packages_per_ric_{tool_name}.png', dpi=300)
     plt.show()
 
     for ric, repos in vulnerable_packages_per_repo.items():
         plt.figure(figsize=(14, 8))
         plt.bar(repos.keys(), repos.values(), color='lightcoral')
-        plt.title(f'Vulnerable Dependency Packages per Repository for {ric}')
+        plt.title(f'Vulnerable Dependency Packages per Repository for {ric} (Tool: {tool_name})')
         plt.xlabel('Repository')
         plt.ylabel('Number of Vulnerable Packages')
         plt.xticks(rotation=90)
         plt.grid(axis='y')
         plt.tight_layout()
-        plt.savefig(f'vulnerable_packages_per_repo_{ric}.png', dpi=300)
+        plt.savefig(f'vulnerable_packages_per_repo_{ric}_{tool_name}.png', dpi=300)
         plt.show()
+
 
 
 if __name__ == "__main__":
