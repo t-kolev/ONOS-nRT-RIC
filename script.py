@@ -10,10 +10,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-# Tools
+
+# Tools used for SCA
 sca_tools = ['Grype.txt', 'Snyk.txt', 'Trivy.txt']
 
-# RICs
+# RICs  to analyze
 rics = ['ONOS', 'OSC']
 
 repoWithError = []
@@ -24,8 +25,6 @@ benchmark_package = re.compile(r'benchmark')
 examples_package = re.compile(r'examples/')
 testapplication_package = re.compile(r'testapplication/')
 cert_package = re.compile(r'certs/')
-
-
 
 # First we normalize the results from each tool
 def format_sca_tool_data(repository, tool):
@@ -38,6 +37,7 @@ def format_sca_tool_data(repository, tool):
 
 # This gets all the vulnerabilities in a normalized way.
 # (In a list which includes all the vulnerabilities, which are not contained in a test package)
+# Format the results from Grype tool
 def formatGrype(repository):
     GrypeRepo = json.loads(repository)
     vulnArray = []
@@ -55,6 +55,7 @@ def formatGrype(repository):
             vulnArray.append(vuln)
     return vulnArray
 
+# Format the results from Snyk tool
 def formatSnyk(repository):
     content = json.loads(repository)
     vulnArray = []
@@ -106,6 +107,7 @@ def formatSnyk(repository):
         repoWithError.append(os.path.basename(content['path']))
     return vulnArray
 
+# Format the results from Trivy tool
 def formatTrivy(repository):
     index = repository.find("{")
     repo = repository[index:]
@@ -133,6 +135,7 @@ def formatTrivy(repository):
                 vulnArray.extend(vulnTarget)
     return vulnArray
 
+# Get vulnerabilities categorized by directories
 def get_vulnerabilities_by_directory(data, tool):
         
         # For grype we can work with the formatted data directly
@@ -227,7 +230,7 @@ def get_vulnerabilities_by_directory(data, tool):
         return vulnerabilities_by_directory
         
         
-
+# Save vulnerabilities by directory
 def save_vulnerabilities_by_directory(vulnerabilities_by_directory, tool, base_dir):
     for directory, vulnerabilities in vulnerabilities_by_directory.items():
 
@@ -284,7 +287,7 @@ def dump_scan_results(rics, sca_tools):
     print("Finished writing: 'sca_results.json'")
     return scan_results
 
-# Define the get_cves_cvss_dependencies function
+# Extract CVEs and CVSS dependencies from the scan results
 def get_cves_cvss_dependencies(sca_tool, sca_tool_data):
     cves_cvss_dependencies = []
     cves = []
@@ -344,6 +347,7 @@ def get_cves_cvss_dependencies(sca_tool, sca_tool_data):
         print("Unknown tool")
     return cves_cvss_dependencies
 
+# Extract CVEs from the scan results
 def extract_cves(sca_results):
     # Initialize the dictionary to store CVE and CVSS dependencies
     sca_cvecvss_dependencies = dict.fromkeys(sca_results.keys())
@@ -383,6 +387,7 @@ def extract_cves(sca_results):
     # Return the results dictionary
     return sca_cvecvss_dependencies
 
+# Count CVEs per repository and RIC
 def count_cves(cve_data):
     print("Going to count CVEs per repo and per RIC")
 
@@ -421,7 +426,8 @@ def count_cves(cve_data):
     pprint.pprint(ric_cves)
     for ric in ric_cves.keys():
         print("RIC: {}, Total unique CVEs: {}".format(ric, len(ric_cves[ric])))
-
+        
+# Count CVEs per repository and tool
 def per_repo_cve_count(cve_data):
     print("1. CVEs per RIC/repo/tool\n"
           "2. Total CVEs per RIC/repo with duplicates\n"
@@ -468,7 +474,7 @@ def per_repo_cve_count(cve_data):
 
     return cve_per_ric_repo_tool, cve_per_ric_repo
 
-
+# Analyze the distribution of CVSS scores
 def cvss_distribution(cvss_data):
     #print("1. Print per RIC per repo per tool CVSS >= 8\n"
           #"2. Print per RIC per repo CVSS >= 8")
@@ -556,6 +562,7 @@ def cvss_distribution(cvss_data):
     
     return low_cvss_per_ric_repo, medium_cvss_per_ric_repo, high_cvss_per_ric_repo, critical_cvss_per_ric_repo, cve_per_ric_repo
 
+# Analyze package distribution
 def package_distribution_analysis(cvss_data):
     print("Analyzing package distribution...")
 
@@ -603,11 +610,12 @@ def package_distribution_analysis(cvss_data):
     #        print("RIC: {}\tRepository: {}\t\tUnique packages: {}".format(ric, repo, packages_per_ric_repo[ric][repo][0]["unique_packages"]))
     return packages_per_ric_repo, packages_per_ric
 
+# Count total CVEs per RIC
 def count_total_cves(low, medium, high, critical):
     total_cves = {ric: sum(len(low[ric][repo][1]) + len(medium[ric][repo][1]) + len(high[ric][repo][1]) + len(critical[ric][repo][1]) for repo in low[ric].keys()) for ric in low.keys()}
     return total_cves
 
-
+# Tabulate CVSS scores per RIC
 def tabulate_cvss(low_cve_data, medium_cve_data, high_cve_data, critical_cve_data):
     for ric in low_cve_data.keys():
         low_cve_count = 0
@@ -639,34 +647,46 @@ def main():
 
     args = parser.parse_args()
 
-    
+     # Load the data file
     with open(args.data_file, 'r') as file:
         data = file.read()
-
+        
+    # Format the data using the appropriate SCA tool
     formatted_data = format_sca_tool_data(data, args.tool)
-
+    
+    # Get vulnerabilities by directory
     vulnerabilities_by_directory = get_vulnerabilities_by_directory(data, args.tool)
 
-
+    # Save vulnerabilities by directory
     base_dir = f"./{args.ric}"
     save_vulnerabilities_by_directory(vulnerabilities_by_directory, args.tool, base_dir)
-
+    
+    # Dump scan results
     sca_results = dump_scan_results([args.ric], [args.tool])
     sca_cvecvss_dependencies_results = extract_cves(sca_results)
 
-
+    # Count CVEs
     count_cves(sca_cvecvss_dependencies_results)
 
+    # Get per repo CVE count
     cve_per_ric_repo_tool, cve_per_ric_repo = per_repo_cve_count(sca_cvecvss_dependencies_results)
 
+    # Get CVSS distribution
     low_cvss_per_ric_repo, medium_cvss_per_ric_repo, high_cvss_per_ric_repo, critical_cvss_per_ric_repo, cve_per_ric_repo = cvss_distribution(sca_cvecvss_dependencies_results)
 
+    # Analyze package distribution
     packages_per_ric_repo, packages_per_ric = package_distribution_analysis(sca_cvecvss_dependencies_results)
 
+    # Tabulate CVSS
     tabulate_cvss(low_cvss_per_ric_repo, medium_cvss_per_ric_repo, high_cvss_per_ric_repo, critical_cvss_per_ric_repo)
 
+    # Calculate total vulnerabilities per RIC
     total_vulnerabilities_ric = count_total_cves(low_cvss_per_ric_repo, medium_cvss_per_ric_repo, high_cvss_per_ric_repo, critical_cvss_per_ric_repo)
+
+    # Calculate vulnerabilities per repository
     vulnerabilities_per_repo = {ric: {repo: len(cves_without_dups) for repo, (_, cves_without_dups) in repos.items()} for ric, repos in cve_per_ric_repo.items()}
+
+    # Calculate severity distribution
     severity_distribution = {
         ric: {
             'low': sum(len(low_cvss_per_ric_repo[ric][repo][1]) for repo in repos.keys()),
@@ -676,65 +696,87 @@ def main():
         }
         for ric, repos in sca_cvecvss_dependencies_results.items()
     }
+
+    # Calculate vulnerable packages per RIC
     vulnerable_packages_per_ric = {ric: len(packages) for ric, packages in packages_per_ric.items()}
+
+    # Calculate vulnerable packages per repository
     vulnerable_packages_per_repo = {ric: {repo: packages_info[0]['unique_packages'] for repo, packages_info in repos.items()} for ric, repos in packages_per_ric_repo.items()}
 
-    # Plotting
-
+    # Remove the .txt extension from the tool name
     tool_name = args.tool.split('.')[0]
+    
+    # Define a color-blind friendly palette
+    color_blind_friendly_palette = {
+    'blue': '#0072B2',
+    'orange': '#D55E00',
+    'green': '#009E73',
+    'yellow': '#F0E442',
+    'red': '#CC79A7',
+    'purple': '#CC79A7',
+    'cyan': '#56B4E9',
+    'grey': '#999999'
+    }
 
-    plt.figure()
-    plt.bar(total_vulnerabilities_ric.keys(), total_vulnerabilities_ric.values(), color='skyblue')
+
+    # Plotting with adjusted figure size and bar width
+    plt.figure(figsize=(3, 5))
+    plt.bar(total_vulnerabilities_ric.keys(), total_vulnerabilities_ric.values(), color=color_blind_friendly_palette['blue'], width=0.5)
     plt.title(f'Total Number of Vulnerabilities per RIC (Tool: {tool_name})')
     plt.xlabel('RIC')
     plt.ylabel('Number of Vulnerabilities')
+    plt.ylim(0, max(total_vulnerabilities_ric.values()) + 5)  # Adjust y-axis limit to fit the data
     plt.grid(axis='y')
     plt.savefig(f'total_vulnerabilities_per_ric_{tool_name}.png', dpi=300)
-    plt.show()  
+    plt.show()
 
     for ric, repos in vulnerabilities_per_repo.items():
-        plt.figure(figsize=(14, 8))
-        plt.bar(repos.keys(), repos.values(), color='lightgreen')
+        plt.figure(figsize=(12, 6))
+        plt.bar(repos.keys(), repos.values(), color=color_blind_friendly_palette['green'], width=0.5)
         plt.title(f'Vulnerabilities per Repository for {ric} (Tool: {tool_name})')
         plt.xlabel('Repository')
         plt.ylabel('Number of Vulnerabilities')
+        plt.ylim(0, max(repos.values()) + 5)  # Adjust y-axis limit to fit the data
         plt.xticks(rotation=90)
         plt.grid(axis='y')
         plt.tight_layout()
         plt.savefig(f'vulnerabilities_per_repo_{ric}_{tool_name}.png', dpi=300)
         plt.show()
-        
+
     for ric, severity in severity_distribution.items():
-        plt.figure()
-        plt.bar(severity.keys(), severity.values(), color=['lightblue', 'lightgreen', 'salmon', 'orange'])
+        plt.figure(figsize=(8, 4.5))
+        colors = [color_blind_friendly_palette['green'],color_blind_friendly_palette['blue'], color_blind_friendly_palette['orange'],  color_blind_friendly_palette['red']]
+        plt.bar(severity.keys(), severity.values(), color=colors, width=0.5)
         plt.title(f'Severity Distribution for {ric} (Tool: {tool_name})')
         plt.xlabel('Severity')
         plt.ylabel('Number of Vulnerabilities')
+        plt.ylim(0, max(severity.values()) + 5)  # Adjust y-axis limit to fit the data
         plt.grid(axis='y')
         plt.savefig(f'severity_distribution_{ric}_{tool_name}.png', dpi=300)
         plt.show()
 
-    plt.figure(figsize=(10, 6))
-    plt.bar(vulnerable_packages_per_ric.keys(), vulnerable_packages_per_ric.values(), color='violet')
+    plt.figure(figsize=(3, 5))
+    plt.bar(vulnerable_packages_per_ric.keys(), vulnerable_packages_per_ric.values(), color=color_blind_friendly_palette['yellow'], width=0.5)
     plt.title(f'Distribution of Vulnerable Dependency Packages per RIC (Tool: {tool_name})')
     plt.xlabel('RIC')
     plt.ylabel('Number of Vulnerable Packages')
+    plt.ylim(0, max(vulnerable_packages_per_ric.values()) + 5)  # Adjust y-axis limit to fit the data
     plt.grid(axis='y')
     plt.savefig(f'vulnerable_packages_per_ric_{tool_name}.png', dpi=300)
     plt.show()
 
     for ric, repos in vulnerable_packages_per_repo.items():
-        plt.figure(figsize=(14, 8))
-        plt.bar(repos.keys(), repos.values(), color='lightcoral')
+        plt.figure(figsize=(12, 6))
+        plt.bar(repos.keys(), repos.values(), color=color_blind_friendly_palette['purple'], width=0.5)
         plt.title(f'Vulnerable Dependency Packages per Repository for {ric} (Tool: {tool_name})')
         plt.xlabel('Repository')
         plt.ylabel('Number of Vulnerable Packages')
+        plt.ylim(0, max(repos.values()) + 5)  # Adjust y-axis limit to fit the data
         plt.xticks(rotation=90)
         plt.grid(axis='y')
         plt.tight_layout()
         plt.savefig(f'vulnerable_packages_per_repo_{ric}_{tool_name}.png', dpi=300)
         plt.show()
-
 
 
 if __name__ == "__main__":
